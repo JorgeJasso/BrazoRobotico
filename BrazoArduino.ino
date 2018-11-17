@@ -1,16 +1,20 @@
 //--------------------------------------------------------------------LIBRERIAS A UTILIZAR.
 
 #include <Servo.h> // Incluimos la biblioteca Servo
+#include <LiquidCrystal.h> //Libreria para utilizar el display LCD.
 
 
 //-------------------------------------------------------------------DECLARACIÓN DE VARIABLES.
+
+LiquidCrystal lcd(52, 50, 48, 46, 44, 42); //Se indican los pines que esta utilizando el LCD.
 
 //----------PINES PWM a utilizar
 const int PIN_PINZA = 5; //Indica el pin que usará la pinza.
 const int PIN_MUNECA = 6; //Indica el pin que usará la muñeca.
 const int PIN_CODO = 9; //Indica el pin que usará el codo.
 const int PIN_HOMBRO = 10; //Indica el pin que usará el hombro.
-
+const int BOTON_PARO = 20; //Indica cuando se parara la secuencia
+const int BOTON_RESTABLECER = 21; //Indica cuando se puede restablecer la secuencia.
 
 //----------Variables para los Servomotores
 const char CARACTERES[10] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'}; //Se declara un arreglo de némeros que servira para convertir la información ASCII del Serial a números decimales.
@@ -40,6 +44,15 @@ void setup() {
   Serial.begin(9600); //Se inicia la comunicación serial en 9600.
   crearLista(100); //Crea la lista con un valor por defecto de 100.
   
+  pinMode(13,OUTPUT); //He establecido el pin 13 como la alimentación del LED de la pantalla LCD.
+  digitalWrite(13,HIGH); //Enciende el LED.
+  lcd.begin(16, 2); //Se inicia el LCD.
+  
+  pinMode(BOTON_PARO, INPUT_PULLUP); //Establece la entrada del BOTON_PARO.
+  attachInterrupt(digitalPinToInterrupt(BOTON_PARO), paro, LOW); //Se declara una interrupcion en el pin 20 que llamara la ISR paro.
+  pinMode(BOTON_RESTABLECER, INPUT_PULLUP); //Establece la entrada del BOTON_RESTABLECER.
+  attachInterrupt(digitalPinToInterrupt(BOTON_RESTABLECER), restablecer, LOW); //Se declara una interrupcion en el pin 21 que llamara la ISR restablecer.
+
   servoPinza.attach(PIN_PINZA);//Se indica el pin que utiliza servoPinza.
   servoMuneca.attach(PIN_MUNECA);//Se indica el pin que utiliza servoMuneca.
   servoCodo.attach(PIN_CODO);//Se indica el pin que utiliza servoCodo.
@@ -68,6 +81,11 @@ void loop() {
     }
   }
   if (realizarMovimiento) { //Realiza un movimiento individual en un servo.
+    lcd.clear(); //Se limpia el LCD
+    lcd.setCursor(0, 0); //Se posiciona en el renglon 1
+    lcd.print("Estado:MOVIENDO");
+    lcd.setCursor(0, 1); //Se posiciona en el renglon 1
+    lcd.print("SERVO.");
     int val = lista[posicion].toInt(); //Se lee la primera posicion de la lista que almacena que servo se tiene que mover.
     posicion++;
     int tiempoMov = lista[posicion].toInt(); //Indica el tiempo que se tiene que mover el servo.
@@ -80,6 +98,9 @@ void loop() {
     int val = 0;
     int tiempoMov = 0;
     posicionesIniciales(); //Antes de realizar la secuencia se dirigen los servos a su posiciones inicial.
+    lcd.clear(); //Se limpia el LCD
+    lcd.setCursor(0, 0); //Se posiciona en el renglon 1
+    lcd.print("Estado:EJECUCION");
     while (realizarSecuencia) { //La repite indefinidamente hasta que se precione el boton de paro.
       val = lista[i].toInt();
       i++;
@@ -97,6 +118,53 @@ void loop() {
 
 //--------------------------------------------------------------------CREACIÓN DE FUNCIONES
 
+/*
+  La función crearLista recibe un parametro de la capacidad que sera el tamaño por defecto con la que empezará la lista, asi mismo se establece el cont
+  a 0 indicando que aun no se encuentra ningún elemento en la lista.
+*/
+void crearLista(size_t parametroCapacidad) {
+  lista = new String[parametroCapacidad];
+  capacidad = parametroCapacidad;
+  cont = 0;
+}
+
+/*
+  La función agregar permite como su nombre lo indica agregar nuevos elemntos a la lista sin antes verificar si el cont (elementos existentes en la lista)
+  es menor a la capacidad, de ser asi se agrega el elemento a la lista aumentando cont, y en caso contrario se llama a la función de rescalar la lista
+  para permitir que se puedan almacenar más elementos.
+*/
+void agregar(String mensajeNuevo) {
+  ++cont;
+  if (cont > capacidad) {
+    size_t nuevoTam = capacidad * 2;
+    rescalar(nuevoTam);
+  }
+  lista[cont - 1] = mensajeNuevo;
+}
+
+/*
+  Una vez que se haya comprobado que no hay espacio disponible en la lista para agregar elementos se procede a rescalarla esto para que tenga un
+  tamaño mayor y asi nuevos elementos se puedan agregar sin problemas. Para realizar esto se borra crea una lista temporal con una mayor capacidad, se borra
+  la lista anterior y por ultimo se asigna la lista temporal a la original.
+*/
+void rescalar(size_t nuevaCapacidad) {
+  String* listaTemporal = new String[nuevaCapacidad];
+  memmove(listaTemporal, lista, cont  * sizeof(int));
+  delete[] lista;
+  capacidad = nuevaCapacidad;
+  lista = listaTemporal;
+}
+
+/*
+  Debido a que las entradas recibidas por el Serial son numeros se tiene que realizar una conversion para devolver el valor original, esto se logra por el
+  arreglo CARACTERES donde se definen los caracteres que el programa puede agregar.
+  Se resta 48 a la entrada debido a que en el codigo ASCCI el primer numero es 48 y como nuestra lista comienza en 0
+  se debe restar 48 para acceder al caracter que el Serial nos manda.
+*/
+char ASCII_a_Numero(int entrada) {
+  entrada = entrada - 48;
+  return CARACTERES[entrada];
+}
 
 // Se define la función que servirá para subir el hombro.
 void levantarHombro(int grados) {
@@ -292,4 +360,22 @@ void posicionesIniciales() {
   delay(500);
   servoHombro.write(145);
   delay(500);
+}
+
+//ISR que permite detener el proceso asignando false a la variable realizarSecuencia.
+void paro() {
+  Serial.println("Entre");
+  realizarSecuencia = false;
+  lcd.clear(); //Se limpia el LCD
+  lcd.setCursor(0, 0); //Se posiciona en el renglon 1
+  lcd.print("Estado: PARO DE");
+  lcd.setCursor(0, 1); //Se posiciona en el renglon 1
+  lcd.print("EMERGENCIA.");
+}
+
+//ISR que permite restablecer el proceso despues de un paro.
+
+void restablecer(){
+   Serial.println("Sali");
+  realizarSecuencia = true;
 }
