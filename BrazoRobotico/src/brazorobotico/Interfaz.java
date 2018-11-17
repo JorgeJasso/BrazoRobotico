@@ -40,7 +40,6 @@ public class Interfaz extends JFrame { // indicamos que esta clase hereda de un 
     final JButton LIMPIAR;//Boton para limpiar la secuencia
     final JButton BOTONES[]; //arreglo de botones
     String secuencia = ""; //Cadena donde se concatenaran las secuencias
-    private final Conexion CONECTAR; //instancia la conexion con el arduino para cuando se necesite mandarle información.
     final Controlador CONTROL; // instanciamos la clase Controlador
 
     public Interfaz() {
@@ -51,7 +50,6 @@ public class Interfaz extends JFrame { // indicamos que esta clase hereda de un 
 
         EventosMouse evento = new EventosMouse(); //Clase para manejar eventos con el mouse
         EventosClic clic = new EventosClic(); //Clase para manejar eventos 
-        CONECTAR = new Conexion(1);  //Se crea la Conexion
         CONTROL = new Controlador(); //Se crea el controlador
 
         PANEL = new JPanel(); //Para usar el panel en la clase Eventos.
@@ -175,7 +173,6 @@ public class Interfaz extends JFrame { // indicamos que esta clase hereda de un 
                 try {
                     Lector escribir = new Lector();  //Llama al Lector que se encuentra en el mismo paquete
                     escribir.escribir(secuencia);  //Le pasa el mensaje para que el metodo de escribir se haga cargo de el.
-                    CONECTAR.enviarDatos(" "); //Mandar el mensaje a enviar datos para mandar el mensaje nuevo al arduino.
                     secuencia = ""; //restablece la secuencia a vacio 
                     JOptionPane.showMessageDialog(null, "Secuencia Guardada");
                 } catch (IOException ex) {
