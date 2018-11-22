@@ -7,10 +7,7 @@ import java.awt.event.ActionEvent;//Se declara para manejar eventos.
 import java.awt.event.ActionListener;//Se declara para manejar eventos de tipo Action.
 import java.awt.event.MouseAdapter; //Una clase de adaptador abstracta para recibir eventos del mouse
 import java.awt.event.MouseEvent;//Un evento que indica que se produjo una acción del mouse en un componente
-import java.io.IOException;//Señala que se ha producido una excepción de E / S de algún tipo.
 import java.util.Date; //esta clase encapsula la fecha y hora actuales.
-import java.util.logging.Level;//define un conjunto de niveles de registro estándar que se pueden usar para controlar la salida del registro. 
-import java.util.logging.Logger; //se usa para registrar mensajes para un sistema específico o componente de aplicación.
 import javax.swing.JButton;  // se agrega para poder trabajar con JButton.
 import javax.swing.JFrame;  //Se agrega para poder trabajar con JFrame. 
 import javax.swing.JLabel;  // se agrega esta libreria para poder trabajar con JLabel.
@@ -57,7 +54,7 @@ public class Interfaz extends JFrame { // indicamos que esta clase hereda de un 
         PANEL = new JPanel(); //Para usar el panel en la clase Eventos.
         PANEL.setBackground(Color.GRAY); // Agregamos fondo gris al panel
         PANEL.setLayout(null);
- 
+
         ETIQUETA_BASE = new JLabel(); //Propiedades para etiqueta Base
         ETIQUETA_BASE.setText("BASE");
         ETIQUETA_BASE.setBounds(145, 25, 100, 10);
@@ -172,18 +169,13 @@ public class Interfaz extends JFrame { // indicamos que esta clase hereda de un 
         @Override
         public void actionPerformed(ActionEvent evento) {
             if (evento.getSource() == GUARDAR) { //Verifica que el evento se produjo de GUARDAR.
-                try {
-                    Lector escribir = new Lector();  //Llama al Lector que se encuentra en el mismo paquete
-                    escribir.escribir(secuencia);  //Le pasa el mensaje para que el metodo de escribir se haga cargo de el.
-                    CONECTAR.enviarDatos(" "); //Mandar el mensaje a enviar datos para mandar el mensaje nuevo al arduino.
-                    secuencia = ""; //restablece la secuencia a vacio 
-                    JOptionPane.showMessageDialog(null, "Secuencia Guardada");
-                } catch (IOException ex) {
-                    Logger.getLogger(Interfaz.class.getName()).log(Level.SEVERE, null, ex);
-                }
+                CONECTAR.enviarDatos(" "); //Mandar el mensaje a enviar datos para mandar el mensaje nuevo al arduino.
+                secuencia = ""; //restablece la secuencia a vacio 
+                JOptionPane.showMessageDialog(null, "Secuencia Guardada");
             } else {
-                JOptionPane.showMessageDialog(null, "Se ha limpiado la secuencia");
+                CONECTAR.enviarDatos("e");
                 secuencia = "";
+                JOptionPane.showMessageDialog(null, "Se ha limpiado la secuencia");
             }
         }
     }

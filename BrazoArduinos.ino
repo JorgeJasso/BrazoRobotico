@@ -1,11 +1,9 @@
 //--------------------------------------------------------------------LIBRERIAS A UTILIZAR.
-
 #include <Servo.h> // Incluimos la biblioteca Servo
 #include <LiquidCrystal.h> //Libreria para utilizar el display LCD.
-
+#include <EEPROM.h> //Libreria para almacenar en memoria.
 
 //-------------------------------------------------------------------DECLARACIÓN DE VARIABLES.
-
 LiquidCrystal lcd(52, 50, 48, 46, 44, 42); //Se indican los pines que esta utilizando el LCD.
 
 //----------PINES PWM a utilizar
@@ -25,8 +23,23 @@ int posicionServoMuneca = 18; //Se define el valor inicial de la muñeca.
 int posicionServoCodo = 90; //Se define el valor inicial para el codo.
 int posicionServoHombro = 180; //Se define el valor inicial para el hombro.
 int totalGrados = 0; //Serán los grados a donde se moverá el servo.
-
+long grados = 0;
 Servo servoPinza, servoMuneca, servoCodo, servoHombro; // Definimos los servos que vamos a utilizar
+
+//----------Variables para motor a pasos
+const int IN1 = 4; //Se define el pin para un motor
+const int IN2 = 3; //Se define el pin para un motor
+const int IN3 = 2; //Se define el pin para un motor
+const int IN4 = 1; //Se define el pin para un motor
+const int PASO [4][4] =//Define las posiciones que pueden tomar el motor a pasos.
+{ {1, 0, 0, 0},
+  {0, 1, 0, 0},
+  {0, 0, 1, 0},
+  {0, 0, 0, 1}
+};
+int Steps = 0;
+int steps_left = 4095;
+int posicionInicialMotor = -2;
 
 //----------Variables para ARREGLOS DINAMICOS
 boolean realizarMovimiento = false; //Determina cuando se puede mover el brazo y cuando no.
@@ -37,17 +50,22 @@ size_t cont; //Se especificara los elementos que tiene la lista.
 size_t capacidad; //Variable para saber el tamaño de la lista.
 String* lista; //Declara un arreglo que servira para almacenar todos los mensajes.
 
+//----------Variables para guardar en memoria.
+int Direccion = 0; //Se crea una variable con el valor de la posición de memoria en la que se va a almacenar el byte.
+
+byte Val1;//Se crean una variable para leer los valores de la memoria EEPROM
+byte Val2;//Se crean una variable para leer los valores de la memoria EEPROM
 
 //--------------------------------------------------------------------------SETUP
 
 void setup() {
   Serial.begin(9600); //Se inicia la comunicación serial en 9600.
   crearLista(100); //Crea la lista con un valor por defecto de 100.
-  
-  pinMode(13,OUTPUT); //He establecido el pin 13 como la alimentación del LED de la pantalla LCD.
-  digitalWrite(13,HIGH); //Enciende el LED.
+
+  pinMode(52, OUTPUT); //He establecido el pin 52 como la alimentación del LED de la pantalla LCD.
+  digitalWrite(52, HIGH); //Enciende el LED.
   lcd.begin(16, 2); //Se inicia el LCD.
-  
+
   pinMode(BOTON_PARO, INPUT_PULLUP); //Establece la entrada del BOTON_PARO.
   attachInterrupt(digitalPinToInterrupt(BOTON_PARO), paro, LOW); //Se declara una interrupcion en el pin 20 que llamara la ISR paro.
   pinMode(BOTON_RESTABLECER, INPUT_PULLUP); //Establece la entrada del BOTON_RESTABLECER.
@@ -57,7 +75,15 @@ void setup() {
   servoMuneca.attach(PIN_MUNECA);//Se indica el pin que utiliza servoMuneca.
   servoCodo.attach(PIN_CODO);//Se indica el pin que utiliza servoCodo.
   servoHombro.attach(PIN_HOMBRO);//Se indica el pin que utiliza servoHombro.
+
+  pinMode(IN1, OUTPUT);//Se definen los pines de salida para el motor a pasos de salida.
+  pinMode(IN2, OUTPUT);//Se definen los pines de salida para el motor a pasos de salida.
+  pinMode(IN3, OUTPUT);//Se definen los pines de salida para el motor a pasos de salida.
+  pinMode(IN4, OUTPUT);//Se definen los pines de salida para el motor a pasos de salida.
   posicionesIniciales();//Posiciona el brazo en las posiciones iniciales por defecto.
+  
+  //Se almacena la información a guardar en un byte.
+  byte Informacion = B11001;// La “B” indica que el formato es binario
 }
 
 
@@ -70,13 +96,19 @@ void loop() {
     if (dato == 44 || dato == 59) { //Compara si el valor ASCII del dato es 44 o 59, es decir una coma o punto y coma respectivamente.
       agregar(valor); //Agrega el valor a la lista.
       realizarMovimiento = true; //Indica que ya hay un movimiento por realizar.
+	  EEPROM.write(Direccion, Informacion);
+      EEPROM.write(Direccion + 1, valor);
       valor = "";
     } else {
       if (dato == 32) { //Si fue un espacio es decir 32 en codigo ASCII
         realizarSecuencia = true; //Indica que es momento de realizar toda la secuencia.
-        valor = "";
       } else {
-        valor = valor + ASCII_a_Numero(dato);//Concatenas los caracteres en valor.
+        if (dato == 101) { //Sirve para ver cuando se quiere borrar la secuencia
+          cont = 0;
+          posicion = 0;
+        } else {
+          valor = valor + ASCII_a_Numero(dato);//Concatenas los caracteres en valor.
+        }
       }
     }
   }
@@ -111,6 +143,7 @@ void loop() {
         i = 0;
         posicionesIniciales(); //Cuando se haya leido la ultima posicion del servo se tendra que ir de nuevo a la posicion inicial de los servos.
       }
+      delay(700);
     }
   }
 }
@@ -297,13 +330,42 @@ void cerrarPinza(int grados) {
 
 // Se utiliza para determinar que servo mover, donde el boton y tiempoMov es la información que viene desde el serial.
 void movimientoBrazo(int boton, int tiempoMov) {
-  int grados = 0;
   switch (boton) {
     case 0: //Base gira a la izquierda
-
+      delay(30);
+      steps_left = (tiempoMov / 5);
+      if (steps_left > 4095) {
+        steps_left = 4095;
+      }
+      while (steps_left > 0) {
+        Serial.println("Girando izquierda");
+        digitalWrite( IN1, PASO[Steps][0] );
+        digitalWrite( IN2, PASO[Steps][1] );
+        digitalWrite( IN3, PASO[Steps][2] );
+        digitalWrite( IN4, PASO[Steps][3] );
+        Steps++;
+        Steps = ( Steps + 4 ) % 4 ;
+        steps_left-- ;  // Un paso menos
+        posicionInicialMotor++;
+      }
       break;
     case 1: //Base gira a la derecha
-
+      delay(30);
+      steps_left = (tiempoMov / 5);
+      if (steps_left > 4095) {
+        steps_left = 4095;
+      }
+      while (steps_left > 0) {
+        Serial.println("Girando derecha");
+        digitalWrite( IN1, PASO[Steps][0] );
+        digitalWrite( IN2, PASO[Steps][1] );
+        digitalWrite( IN3, PASO[Steps][2] );
+        digitalWrite( IN4, PASO[Steps][3] );
+        Steps--;
+        Steps = ( Steps + 4 ) % 4 ;
+        steps_left-- ;  // Un paso menos
+        posicionInicialMotor--;
+      }
       break;
     case 2: //Hombro levantar
       grados = milisegundnosAGrados(tiempoMov);
@@ -350,7 +412,25 @@ int milisegundnosAGrados(int milisegundos) {
 
 //Indica las posiciones iniciales que tiene todos los servos por defecto.
 void posicionesIniciales() {
-  Serial.println("Posiciones iniciales");
+  delay(500);
+  while (posicionInicialMotor != -2) {
+    if (posicionInicialMotor > 0) {
+      Steps--;
+      posicionInicialMotor--;
+    } else {
+      Steps++;
+      posicionInicialMotor++;
+    }
+    Steps = ( Steps + 4 ) % 4 ;
+    Serial.print("Pasos: ");
+    Serial.println(Steps);
+    Serial.print("Posicion motor: ");
+    Serial.println(posicionInicialMotor);
+    digitalWrite( IN1, PASO[Steps][0] );
+    digitalWrite( IN2, PASO[Steps][1] );
+    digitalWrite( IN3, PASO[Steps][2] );
+    digitalWrite( IN4, PASO[Steps][3] );
+  }
   delay(500);
   servoPinza.write(60);
   delay(500);
@@ -364,7 +444,6 @@ void posicionesIniciales() {
 
 //ISR que permite detener el proceso asignando false a la variable realizarSecuencia.
 void paro() {
-  Serial.println("Entre");
   realizarSecuencia = false;
   lcd.clear(); //Se limpia el LCD
   lcd.setCursor(0, 0); //Se posiciona en el renglon 1
@@ -374,8 +453,6 @@ void paro() {
 }
 
 //ISR que permite restablecer el proceso despues de un paro.
-
-void restablecer(){
-   Serial.println("Sali");
+void restablecer() {
   realizarSecuencia = true;
 }

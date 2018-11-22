@@ -20,7 +20,6 @@ public class Conexion {
     public Conexion(int numConexion) {
         if (numConexion == 1) { //Si llamada es 1 significa que se esta llamando desde el main y debe crear la conexion, si se llama desde otro lado ya no la vuelve a crear.
             conectarConArduino();//Se crea la conexion con arduino.
-            enviarDatos(); //Envia datos si es que existen al arduino.
         }
     }
 
@@ -48,18 +47,6 @@ public class Conexion {
             Output = serialPort.getOutputStream(); //Establece el puerto serial en el Ouyput para que se puedan comunicar la computadora y arduino.
         } catch (PortInUseException | UnsupportedCommOperationException | IOException e) {
             JOptionPane.showMessageDialog(null, "Error al conector a Arduino");
-        }
-    }
-
-    private void enviarDatos() {
-        try {
-            Lector lector = new Lector(); //Utiliza el lector.
-            String secuencia = lector.leer();
-            if (secuencia != null) {
-                Output.write(secuencia.getBytes()); //Se manda la secuencia leido.
-            }
-        } catch (IOException e) {
-            JOptionPane.showMessageDialog(null, "Error al enviar datos");
         }
     }
 
