@@ -1,8 +1,9 @@
 # Brazo Robótico de 5 Ejes
 ## Presentación 
 <img src="https://github.com/JorgeJasso/BrazoRobotico/blob/master/Imagenes/Presentacion.png">
+
 ## Introducción
-> El siguiente proyecto consiste en un sistema para controlar y programar un Brazo Robot, simulando las funciones básicas de un robot industrial. 
+El siguiente proyecto consiste en un sistema para controlar y programar un Brazo Robot, simulando las funciones básicas de un robot industrial. 
 El robot tiene dos funciones básicas:
 *  Programar:  Registrar las posiciones de los brazos en tres dimensiones (cada registro es un "paso", cada registro es una serie de pasos).
 *  Ejecutar : Se realiza en secuencia las posiciones registradas en el programa. El robot ejecta el programa hasta que se oprima el boton ABORTAR.
@@ -125,23 +126,23 @@ https://playground.arduino.cc/Main/LiquidCrystal
 ## Imagenes del montaje 
 ### Brazo robot
 <img src="https://github.com/JorgeJasso/BrazoRobotico/blob/master/Imagenes/Brazo.jpg" width="400" height="400">
-### Protoboard
-### Display LCD y Botones
-<img src="https://github.com/JorgeJasso/BrazoRobotico/blob/master/Imagenes/ImgLCDBotones.jpg" width="400" height="400" >
+## Protoboard
+## Display LCD y Botones
+<img src="https://github.com/JorgeJasso/BrazoRobotico/blob/master/Imagenes/ImgLCDBotones.png" width="400" height="400" >
 <img src="https://github.com/JorgeJasso/BrazoRobotico/blob/master/Imagenes/ProtoLCDBotones.jpg" width="400" height="400" >
 <img src="https://github.com/JorgeJasso/BrazoRobotico/blob/master/Imagenes/ProtoLCD.jpg" width="400" height="400" >
 <img src="https://github.com/JorgeJasso/BrazoRobotico/blob/master/Imagenes/ProtoBotones.jpg" width="400" height="400" >
-### Arduino 
-### Display LCD y botones
+## Arduino 
+## Display LCD y botones
 <img src="https://github.com/JorgeJasso/BrazoRobotico/blob/master/Imagenes/ArduinoLCDBotones.jpg" width="400" height="400" >
-<img src="https://github.com/JorgeJasso/BrazoRobotico/blob/master/Imagenes/ImgLCD.jpg" width="400" height="400" >
-<img src="https://github.com/JorgeJasso/BrazoRobotico/blob/master/Imagenes/ImgBotones.jpg" width="400" height="400" >
-### Servomotores
-<img src="https://github.com/JorgeJasso/BrazoRobotico/blob/master/Imagenes/ImgServos.png" width="400" height="400" >
+<img src="https://github.com/JorgeJasso/BrazoRobotico/blob/master/Imagenes/ImgLCD.png" width="400" height="400" >
+<img src="https://github.com/JorgeJasso/BrazoRobotico/blob/master/Imagenes/ImgBotones.png" width="400" height="400" >
+## Servomotores
+<img src="https://github.com/JorgeJasso/BrazoRobotico/blob/master/Imagenes/Imgservos.png" width="400" height="400" >
 <img src="https://github.com/JorgeJasso/BrazoRobotico/blob/master/Imagenes/ImgServo2.jpg" width="400" height="400" >
 <img src="https://github.com/JorgeJasso/BrazoRobotico/blob/master/Imagenes/ImgServo3.jpg" width="400" height="400" >
-### Motor paso a paso
+## Motor paso a paso
 <img src="https://github.com/JorgeJasso/BrazoRobotico/blob/master/Imagenes/ImgMotorPasos.png" width="400" height="400" >
 <img src="https://github.com/JorgeJasso/BrazoRobotico/blob/master/Imagenes/ImgServo1.jpg" width="400" height="400" >
-### Interfaz de Software
-<img src="https://github.com/JorgeJasso/BrazoRobotico/blob/master/Imagenes/Interfaz.jpg" width="400" height="400" >
+## Interfaz de Software
+<img src="https://github.com/JorgeJasso/BrazoRobotico/blob/master/Imagenes/Interfaz.png" width="400" height="400" >
